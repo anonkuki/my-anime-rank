@@ -9,27 +9,27 @@
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --text: #eee; --accent: #00bcd4; }
         * { box-sizing: border-box; touch-action: pan-y; }
-        body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 100px; }
-        #capture-area { background: var(--bg); padding: 10px; border-radius: 8px; padding-bottom: 20px; }
+        body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 5px; padding-bottom: 100px; max-width: 100vw; overflow-x: hidden; }
+        #capture-area { background: var(--bg); padding: 5px; border-radius: 8px; padding-bottom: 20px; width: 100%; }
         h1 { text-align: center; margin: 10px 0; font-size: 1.5rem; color: #fff; }
         .user-info { text-align: center; margin-bottom: 15px; }
         .user-input { background: transparent; border: none; border-bottom: 2px solid #555; color: var(--accent); font-size: 1.2rem; text-align: center; width: 150px; outline: none; font-weight: bold; }
         
-        /* 排名区域优化：增加高度，增加间距 */
-        .tier-row { display: flex; border-bottom: 1px solid #000; background: #2a2a2a; min-height: 130px; margin-bottom: 2px; }
-        .tier-label { width: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; color: #333; flex-shrink: 0; border-right: 1px solid #000; text-align: center; padding: 2px; line-height: 1.2; }
-        .label-s { background: #ff7f7f; } .label-a { background: #ffbf7f; } .label-b { background: #ffdf7f; } .label-c { background: #ffff7f; } .label-d { background: #bfff7f; }
-        .tier-content { flex-grow: 1; display: flex; flex-wrap: wrap; align-content: flex-start; padding: 8px; gap: 6px; }
+        /* 排名区域优化：增加高度，增加间距，自适应宽度 */
+        .tier-row { display: flex; border-bottom: 1px solid #000; background: #2a2a2a; min-height: 150px; margin-bottom: 2px; width: 100%; }
+        .tier-label { width: 45px; min-width: 45px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; color: #333; flex-shrink: 0; border-right: 1px solid #000; text-align: center; padding: 5px 2px; line-height: 1.3; writing-mode: vertical-rl; }
+        .label-s { background: #ff7f7f; } .label-a { background: #ffbf7f; } .label-b { background: #ffdf7f; } .label-c { background: #ffff7f; writing-mode: horizontal-tb; } .label-d { background: #bfff7f; }
+        .tier-content { flex-grow: 1; display: flex; flex-wrap: wrap; align-content: flex-start; padding: 8px; gap: 6px; min-width: 0; }
         
-        .controls { margin-top: 20px; position: sticky; top: 0; z-index: 999; background: var(--bg); padding: 5px 0; }
-        #search-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; font-size: 1rem; margin-bottom: 10px; }
-        #pool-container { border: 2px dashed #444; background: #1a1a1a; padding: 10px; border-radius: 8px; min-height: 140px; }
-        .pool-header { display: flex; justify-content: space-between; color: #888; font-size: 0.9rem; margin-bottom: 5px; }
+        .controls { margin-top: 20px; position: sticky; top: 0; z-index: 999; background: var(--bg); padding: 5px 0; width: 100%; }
+        #search-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; font-size: 1rem; margin-bottom: 10px; box-sizing: border-box; }
+        #pool-container { border: 2px dashed #444; background: #1a1a1a; padding: 10px; border-radius: 8px; min-height: 180px; width: 100%; box-sizing: border-box; }
+        .pool-header { display: flex; justify-content: space-between; color: #888; font-size: 0.9rem; margin-bottom: 8px; }
         
-        .anime-card { width: 75px; height: 108px; flex-shrink: 0; cursor: pointer; background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #333; position: relative; overflow: hidden; }
+        .anime-card { width: 80px; height: 115px; flex-shrink: 0; cursor: pointer; background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #333; position: relative; overflow: hidden; }
         /* 按压或拖动时显示名字 */
         .anime-card:active .card-name, .anime-card.sortable-drag .card-name { display: flex; }
-        .card-name { display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.85); color: white; font-size: 10px; padding: 2px; text-align: center; align-items: center; justify-content: center; min-height: 30px; line-height: 1.2; pointer-events: none; }
+        .card-name { display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.85); color: white; font-size: 11px; padding: 3px; text-align: center; align-items: center; justify-content: center; min-height: 32px; line-height: 1.3; pointer-events: none; }
         
         .fab-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; }
         .btn { border: none; border-radius: 50px; padding: 12px 25px; font-weight: bold; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; font-size: 1rem; }
