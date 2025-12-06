@@ -1,0 +1,418 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>佐佑幻想研2025番剧排名 (Ultimate版)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <style>
+        body { 
+            font-family: "Microsoft YaHei", sans-serif; 
+            background-color: #121212; 
+            color: #eee; 
+            margin: 0; 
+            padding: 20px; 
+            padding-bottom: 120px;
+        }
+        
+        h1 { text-align: center; margin-bottom: 20px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        
+        /* === 阶段一：清洗区 === */
+        #prep-phase { display: block; }
+        
+        .prep-header {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid #00bcd4;
+        }
+
+        /* 搜索框样式 */
+        #search-input {
+            width: 60%;
+            padding: 12px 20px;
+            margin: 15px 0;
+            border-radius: 25px;
+            border: 2px solid #555;
+            background: #1a1a1a;
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        #search-input:focus { border-color: #00bcd4; }
+        
+        .prep-grid {
+            display: flex; flex-wrap: wrap; gap: 10px;
+            justify-content: center;
+            background: #1e1e1e; padding: 15px;
+            border-radius: 10px; min-height: 300px;
+        }
+
+        /* === 阶段二：游戏区 === */
+        #game-phase { display: none; }
+
+        /* === 排名行 === */
+        .tier-row {
+            display: flex; border-bottom: 2px solid #000;
+            background-color: #2a2a2a; min-height: 130px;
+        }
+        
+        .tier-label {
+            width: 120px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: 900; color: #333;
+            flex-shrink: 0; border-right: 2px solid #000;
+            text-align: center; line-height: 1.2; padding: 0 5px; user-select: none;
+        }
+        
+        .label-s { background-color: #ff7f7f; } 
+        .label-a { background-color: #ffbf7f; } 
+        .label-b { background-color: #ffdf7f; } 
+        .label-c { background-color: #ffff7f; } 
+        .label-d { background-color: #bfff7f; } 
+
+        .tier-content {
+            flex-grow: 1; display: flex; flex-wrap: wrap; 
+            align-content: flex-start; padding: 10px; gap: 8px;
+        }
+
+        /* === 待选池/抽卡区 === */
+        #pool-container {
+            margin-top: 30px; border: 2px dashed #666;
+            background-color: #1e1e1e; padding: 15px;
+            border-radius: 10px; min-height: 160px;
+        }
+        
+        .pool-header { 
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; color: #aaa; 
+            border-bottom: 1px solid #444; padding-bottom: 8px;
+        }
+        
+        .pool-content {
+            display: flex; flex-direction: row; flex-wrap: wrap;     
+            justify-content: flex-start; gap: 8px; width: 100%;         
+        }
+
+        /* === 垃圾桶 === */
+        #trash-container {
+            position: fixed; bottom: 20px; right: 20px;
+            width: 100px; height: 100px;
+            border: 3px solid #ff4444;
+            background-color: rgba(50, 0, 0, 0.9);
+            border-radius: 15px;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: #ff4444; font-weight: bold;
+            z-index: 1000; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #trash-container.drag-over { background-color: #ff4444; color: white; transform: scale(1.1); }
+
+        /* === 卡片 === */
+        .anime-card {
+            width: 90px; height: 130px; flex-shrink: 0;
+            cursor: grab; position: relative;
+            background-size: cover; background-position: center;
+            border: 2px solid #444; border-radius: 6px;
+            transition: transform 0.1s, border-color 0.2s;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+        
+        .anime-card:hover { border-color: #00bcd4; transform: translateY(-5px) scale(1.05); z-index: 100; }
+        
+        /* 选中时的光圈 */
+        .anime-card.hovered-key { box-shadow: 0 0 10px #00bcd4; border-color: #00bcd4; }
+
+        .anime-card:hover::after {
+            content: attr(data-title);
+            position: absolute; bottom: -35px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.95); color: #fff;
+            padding: 6px 10px; font-size: 13px; border-radius: 4px;
+            white-space: nowrap; z-index: 9999; pointer-events: none;
+        }
+
+        /* === 快捷键提示 === */
+        .shortcut-guide {
+            position: fixed; top: 10px; left: 10px;
+            background: rgba(0,0,0,0.8); padding: 15px;
+            border-radius: 8px; font-size: 0.85rem; color: #ccc;
+            z-index: 2000; pointer-events: none;
+            border: 1px solid #444;
+        }
+        .key { 
+            display: inline-block; padding: 2px 6px; 
+            background: #444; border-radius: 4px; 
+            color: white; font-weight: bold; margin: 0 3px; font-family: monospace;
+        }
+
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: bold; font-size: 1rem;
+            transition: filter 0.2s;
+        }
+        .btn-start { background-color: #00bcd4; color: black; width: 100%; font-size: 1.2rem; margin-top:10px; }
+        .btn-gacha { background-color: #e91e63; color: white; }
+        .btn-all { background-color: #4caf50; color: white; }
+        .btn:hover { filter: brightness(1.2); }
+
+        #count-display { font-size: 1.5rem; color: #00bcd4; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="shortcut-guide">
+        <strong>⚡ 极速操作指南</strong><br><br>
+        <div id="guide-prep">
+            🔍 <strong>清洗阶段:</strong><br>
+            • 双击卡片 -> <span style="color:#ff4444">删除</span><br>
+            • 右键卡片 -> <span style="color:#ff4444">删除</span>
+        </div>
+        <div id="guide-game" style="display:none">
+            🎮 <strong>排名阶段:</strong> (鼠标悬停时)<br>
+            • 按 <span class="key">1</span> -> 移至 夯(S)<br>
+            • 按 <span class="key">2</span> -> 移至 顶尖(A)<br>
+            • 按 <span class="key">3</span> -> 移至 人上人(B)<br>
+            • 按 <span class="key">4</span> -> 移至 NPC(C)<br>
+            • 按 <span class="key">5</span> -> 移至 拉完了(D)<br>
+            • 按 <span class="key">Del</span> -> <span style="color:#ff4444">删除</span>
+        </div>
+    </div>
+
+    <div id="trash-container">
+        <div style="font-size:30px">🗑️</div>
+        <div>拖入删除</div>
+    </div>
+
+    <div id="prep-phase">
+        <h1>步骤 1: 清洗卡池 (极速版)</h1>
+        <div class="prep-header">
+            <input type="text" id="search-input" placeholder="🔍 输入番名快速查找（例如：Solo / 药屋...）">
+            <p>当前共有 <span id="prep-count">0</span> 部番剧。</p>
+            <button class="btn btn-start" onclick="startGame()">✅ 清洗完成，开始排名游戏！</button>
+        </div>
+        <div class="prep-grid" id="prep-pool"></div>
+    </div>
+
+    <div id="game-phase">
+        <h1>佐佑幻想研2025番剧排名</h1>
+        
+        <div id="board">
+            <div class="tier-row"><div class="tier-label label-s">夯</div><div class="tier-content" id="tier-s"></div></div>
+            <div class="tier-row"><div class="tier-label label-a">顶尖</div><div class="tier-content" id="tier-a"></div></div>
+            <div class="tier-row"><div class="tier-label label-b">人上人</div><div class="tier-content" id="tier-b"></div></div>
+            <div class="tier-row"><div class="tier-label label-c">NPC</div><div class="tier-content" id="tier-c"></div></div>
+            <div class="tier-row"><div class="tier-label label-d">拉完了</div><div class="tier-content" id="tier-d"></div></div>
+        </div>
+
+        <div id="pool-container">
+            <div class="pool-header">
+                <div>剩余卡池: <span id="deck-count">0</span></div>
+                <div style="display:flex; gap:10px">
+                    <button class="btn btn-gacha" onclick="drawAnime(1)">🎲 单抽</button>
+                    <button class="btn btn-gacha" onclick="drawAnime(10)">🔥 十连</button>
+                    <button class="btn btn-all" onclick="drawAll()">🚀 梭哈</button>
+                </div>
+            </div>
+            <div class="pool-content" id="game-pool"></div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [{"title": "俺だけレベルアップな件 Season 2 -Arise from the Shadow-", "image_url": "https://cdn.myanimelist.net/images/anime/1448/147351.jpg", "id": 58567}, {"title": "SAKAMOTO DAYS", "image_url": "https://cdn.myanimelist.net/images/anime/1026/146459.jpg", "id": 58939}, {"title": "薬屋のひとりごと 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1025/147458.jpg", "id": 58514}, {"title": "Dr.STONE SCIENCE FUTURE", "image_url": "https://cdn.myanimelist.net/images/anime/1403/146479.jpg", "id": 57592}, {"title": "君のことが大大大大大好きな100人の彼女 2期", "image_url": "https://cdn.myanimelist.net/images/anime/1093/145470.jpg", "id": 57616}, {"title": "全修。", "image_url": "https://cdn.myanimelist.net/images/anime/1003/146841.jpg", "id": 58502}, {"title": "クラスの大嫌いな女子と結婚することになった。", "image_url": "https://cdn.myanimelist.net/images/anime/1775/147330.jpg", "id": 59135}, {"title": "わたしの幸せな結婚", "image_url": "https://cdn.myanimelist.net/images/anime/1946/146770.jpg", "id": 56701}, {"title": "ギルドの受付嬢ですが、残業は嫌なのでボスをソロ討伐しようと思います", "image_url": "https://cdn.myanimelist.net/images/anime/1904/144608.jpg", "id": 55997}, {"title": "この会社に好きな人がいます", "image_url": "https://cdn.myanimelist.net/images/anime/1123/146384.jpg", "id": 59361}, {"title": "ハニーレモンソーダ", "image_url": "https://cdn.myanimelist.net/images/anime/1382/144602.jpg", "id": 58271}, {"title": "不遇職【鑑定士】が実は最強だった", "image_url": "https://cdn.myanimelist.net/images/anime/1683/146293.jpg", "id": 59144}, {"title": "黒岩メダカに私の可愛いが通じない", "image_url": "https://cdn.myanimelist.net/images/anime/1792/146404.jpg", "id": 58853}, {"title": "いずれ最強の錬金術師?", "image_url": "https://cdn.myanimelist.net/images/anime/1431/146222.jpg", "id": 58822}, {"title": "サラリーマンが異世界に行ったら四天王になった話", "image_url": "https://cdn.myanimelist.net/images/anime/1668/144352.jpg", "id": 59349}, {"title": "Aランクパーティを離脱した俺は、元教え子たちと迷宮深部を目指す。", "image_url": "https://cdn.myanimelist.net/images/anime/1897/149800.jpg", "id": 59730}, {"title": "悪役令嬢転生おじさん", "image_url": "https://cdn.myanimelist.net/images/anime/1255/146484.jpg", "id": 57719}, {"title": "天久鷹央の推理カルテ", "image_url": "https://cdn.myanimelist.net/images/anime/1096/147327.jpg", "id": 58600}, {"title": "地縛少年花子くん2", "image_url": "https://cdn.myanimelist.net/images/anime/1878/146291.jpg", "id": 53924}, {"title": "外れスキル《木の実マスター》 ～スキルの実（食べたら死ぬ）を無限に食べられるようになった件について～", "image_url": "https://cdn.myanimelist.net/images/anime/1703/146128.jpg", "id": 59002}, {"title": "アラフォー男の異世界通販", "image_url": "https://cdn.myanimelist.net/images/anime/1887/146512.jpg", "id": 59561}, {"title": "日本へようこそエルフさん。", "image_url": "https://cdn.myanimelist.net/images/anime/1650/146113.jpg", "id": 57648}, {"title": "没落予定の貴族だけど、暇だったから魔法を極めてみた", "image_url": "https://cdn.myanimelist.net/images/anime/1245/147612.jpg", "id": 58437}, {"title": "青の祓魔師 終夜篇", "image_url": "https://cdn.myanimelist.net/images/anime/1390/147040.jpg", "id": 59226}, {"title": "メダリスト", "image_url": "https://cdn.myanimelist.net/images/anime/1029/146850.jpg", "id": 55318}, {"title": "Sランクモンスターの《ベヒーモス》だけど、猫と間違われてエルフ娘の騎士（ペット）として暮らしてます", "image_url": "https://cdn.myanimelist.net/images/anime/1656/146916.jpg", "id": 58473}, {"title": "マジック・メイカー －異世界魔法の作り方－", "image_url": "https://cdn.myanimelist.net/images/anime/1802/146725.jpg", "id": 59265}, {"title": "沖縄で好きになった子が方言すぎてツラすぎる", "image_url": "https://cdn.myanimelist.net/images/anime/1744/147363.jpg", "id": 55842}, {"title": "Übel Blatt～ユーベルブラット～", "image_url": "https://cdn.myanimelist.net/images/anime/1647/146961.jpg", "id": 58216}, {"title": "戦隊レッド 異世界で冒険者になる", "image_url": "https://cdn.myanimelist.net/images/anime/1390/146918.jpg", "id": 59514}, {"title": "Unnamed Memory Act.2", "image_url": "https://cdn.myanimelist.net/images/anime/1137/147179.jpg", "id": 59142}, {"title": "ニートくノ一となぜか同棲はじめました", "image_url": "https://cdn.myanimelist.net/images/anime/1748/148595.jpg", "id": 58082}, {"title": "異修羅 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1699/146979.jpg", "id": 58484}, {"title": "花は咲く、修羅の如く", "image_url": "https://cdn.myanimelist.net/images/anime/1787/146809.jpg", "id": 59055}, {"title": "どうせ、恋してしまうんだ。", "image_url": "https://cdn.myanimelist.net/images/anime/1021/146952.jpg", "id": 58259}, {"title": "妃教育から逃げたい私", "image_url": "https://cdn.myanimelist.net/images/anime/1711/146319.jpg", "id": 57050}, {"title": "グリザイア:ファントムトリガー", "image_url": "https://cdn.myanimelist.net/images/anime/1319/142188.jpg", "id": 51119}, {"title": "誰ソ彼ホテル", "image_url": "https://cdn.myanimelist.net/images/anime/1974/147269.jpg", "id": 59136}, {"title": "BanG Dream! Ave Mujica", "image_url": "https://cdn.myanimelist.net/images/anime/1181/148235.jpg", "id": 56653}, {"title": "魔法使いの約束", "image_url": "https://cdn.myanimelist.net/images/anime/1116/146903.jpg", "id": 57152}, {"title": "もめんたりー・リリィ", "image_url": "https://cdn.myanimelist.net/images/anime/1107/143656.jpg", "id": 58739}, {"title": "空色ユーティリティ", "image_url": "https://cdn.myanimelist.net/images/anime/1909/146787.jpg", "id": 58066}, {"title": "ババンババンバンバンパイア", "image_url": "https://cdn.myanimelist.net/images/anime/1221/146649.jpg", "id": 58265}, {"title": "FARMAGIA（ファーマギア）", "image_url": "https://cdn.myanimelist.net/images/anime/1406/146839.jpg", "id": 59113}, {"title": "キミとアイドルプリキュア♪", "image_url": "https://cdn.myanimelist.net/images/anime/1277/147358.jpg", "id": 60407}, {"title": "魔法つかいプリキュア！！～MIRAI DAYS～", "image_url": "https://cdn.myanimelist.net/images/anime/1650/146287.jpg", "id": 54717}, {"title": "想星のアクエリオン Myth of Emotions", "image_url": "https://cdn.myanimelist.net/images/anime/1665/146999.jpg", "id": 54769}, {"title": "UniteUp! -Uni:Birth-", "image_url": "https://cdn.myanimelist.net/images/anime/1561/145507.jpg", "id": 56135}, {"title": "0歳児スタートダッシュ物語 シーズン2", "image_url": "https://cdn.myanimelist.net/images/anime/1635/148561.jpg", "id": 60425}, {"title": "闇芝居 十四期", "image_url": "https://cdn.myanimelist.net/images/anime/1811/146726.jpg", "id": 60410}, {"title": "キン肉マン 完璧超人始祖編 Season2", "image_url": "https://cdn.myanimelist.net/images/anime/1228/146704.jpg", "id": 59914}, {"title": "カードファイト!! ヴァンガード Divinez デラックス編", "image_url": "https://cdn.myanimelist.net/images/anime/1022/146945.jpg", "id": 54144}, {"title": "監禁区域レベルX 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1511/146045.jpg", "id": 60094}, {"title": "魔神創造伝ワタル", "image_url": "https://cdn.myanimelist.net/images/anime/1550/145123.jpg", "id": 57827}, {"title": "ミニミニ minini", "image_url": "https://cdn.myanimelist.net/images/anime/1753/148560.jpg", "id": 60677}, {"title": "はーい！ミャクミャクです", "image_url": "https://cdn.myanimelist.net/images/anime/1683/152841.jpg", "id": 61197}, {"title": "喜羊羊与灰太狼之奇侠大营救", "image_url": "https://cdn.myanimelist.net/images/anime/1480/147392.jpg", "id": 60712}, {"title": "최강공룡 미니특공대", "image_url": "https://cdn.myanimelist.net/images/anime/1760/150212.jpg", "id": 60913}, {"title": "心奇爆龙战车暴龙出击5", "image_url": "https://cdn.myanimelist.net/images/anime/1702/147811.jpg", "id": 60885}, {"title": "嘿，托玛", "image_url": "https://cdn.myanimelist.net/images/anime/1440/147830.jpg", "id": 60899}, {"title": "冰球旋风 第2季", "image_url": "https://cdn.myanimelist.net/images/anime/1951/151255.jpg", "id": 62143}, {"title": "有趣的成语故事", "image_url": "https://cdn.myanimelist.net/images/anime/1295/150278.jpg", "id": 61746}, {"title": "엄마 까투리 시즌 6", "image_url": "https://cdn.myanimelist.net/images/anime/1957/151330.jpg", "id": 62178}, {"title": "熊出没之小小世界2", "image_url": "https://cdn.myanimelist.net/images/anime/1836/149499.jpg", "id": 61593}, {"title": "炎炎ノ消防隊 参ノ章", "image_url": "https://cdn.myanimelist.net/images/anime/1527/146836.jpg", "id": 51818}, {"title": "ラザロ", "image_url": "https://cdn.myanimelist.net/images/anime/1098/150300.jpg", "id": 56038}, {"title": "WIND BREAKER Season 2", "image_url": "https://cdn.myanimelist.net/images/anime/1526/148873.jpg", "id": 59160}, {"title": "ウィッチウォッチ", "image_url": "https://cdn.myanimelist.net/images/anime/1526/150689.jpg", "id": 59597}, {"title": "片田舎のおっさん、剣聖になる", "image_url": "https://cdn.myanimelist.net/images/anime/1069/148148.jpg", "id": 59452}, {"title": "最強の王様、二度目の人生は何をする?", "image_url": "https://cdn.myanimelist.net/images/anime/1712/148299.jpg", "id": 60146}, {"title": "ヴィジランテ -僕のヒーローアカデミア ILLEGALS-", "image_url": "https://cdn.myanimelist.net/images/anime/1538/148604.jpg", "id": 60593}, {"title": "一瞬で治療していたのに役立たずと追放された天才治癒師、闇ヒーラーとして楽しく生きる", "image_url": "https://cdn.myanimelist.net/images/anime/1211/147335.jpg", "id": 58359}, {"title": "九龍ジェネリックロマンス", "image_url": "https://cdn.myanimelist.net/images/anime/1719/150050.jpg", "id": 60083}, {"title": "男女の友情は成立する？（いや、しないっ!!）", "image_url": "https://cdn.myanimelist.net/images/anime/1429/150067.jpg", "id": 52709}, {"title": "スライム倒して300年、知らないうちにレベルMAXになってました ～そのに～", "image_url": "https://cdn.myanimelist.net/images/anime/1074/147339.jpg", "id": 50738}, {"title": "履いてください、鷹峰さん", "image_url": "https://cdn.myanimelist.net/images/anime/1521/148809.jpg", "id": 59457}, {"title": "鬼人幻燈抄", "image_url": "https://cdn.myanimelist.net/images/anime/1722/148906.jpg", "id": 49778}, {"title": "紫雲寺家の子供たち", "image_url": "https://cdn.myanimelist.net/images/anime/1955/148360.jpg", "id": 58131}, {"title": "勘違いの工房主～英雄パーティの元雑用係が、実は戦闘以外がSSSランクだったというよくある話", "image_url": "https://cdn.myanimelist.net/images/anime/1743/148272.jpg", "id": 60140}, {"title": "俺は星間国家の悪徳領主！", "image_url": "https://cdn.myanimelist.net/images/anime/1703/148600.jpg", "id": 60154}, {"title": "阿波連さんははかれない season2", "image_url": "https://cdn.myanimelist.net/images/anime/1501/148355.jpg", "id": 59466}, {"title": "完璧すぎて可愛げがないと婚約破棄された聖女は隣国に売られる", "image_url": "https://cdn.myanimelist.net/images/anime/1263/148318.jpg", "id": 60157}, {"title": "戦隊大失格 2nd Season", "image_url": "https://cdn.myanimelist.net/images/anime/1405/147694.jpg", "id": 59189}, {"title": "ロックは淑女の嗜みでして", "image_url": "https://cdn.myanimelist.net/images/anime/1781/150071.jpg", "id": 59360}, {"title": "Summer Pockets", "image_url": "https://cdn.myanimelist.net/images/anime/1691/148602.jpg", "id": 50694}, {"title": "ウマ娘 シンデレラグレイ", "image_url": "https://cdn.myanimelist.net/images/anime/1626/148097.jpg", "id": 59636}, {"title": "黒執事 -緑の魔女編-", "image_url": "https://cdn.myanimelist.net/images/anime/1517/148292.jpg", "id": 59228}, {"title": "ゴリラの神から加護された令嬢は王立騎士団で可愛がられる", "image_url": "https://cdn.myanimelist.net/images/anime/1714/148317.jpg", "id": 59935}, {"title": "アポカリプスホテル", "image_url": "https://cdn.myanimelist.net/images/anime/1511/148642.jpg", "id": 59675}, {"title": "機動戦士 Gundam GQuuuuuuX", "image_url": "https://cdn.myanimelist.net/images/anime/1052/148743.jpg", "id": 60449}, {"title": "忍者と殺し屋のふたりぐらし", "image_url": "https://cdn.myanimelist.net/images/anime/1855/146642.jpg", "id": 58725}, {"title": "ある魔女が死ぬまで", "image_url": "https://cdn.myanimelist.net/images/anime/1620/148221.jpg", "id": 59169}, {"title": "小市民シリーズ 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1224/148321.jpg", "id": 59828}, {"title": "かくして！マキナさん!!", "image_url": "https://cdn.myanimelist.net/images/anime/1843/146935.jpg", "id": 58833}, {"title": "アン・シャーリー", "image_url": "https://cdn.myanimelist.net/images/anime/1564/150049.jpg", "id": 60334}, {"title": "mono", "image_url": "https://cdn.myanimelist.net/images/anime/1677/148603.jpg", "id": 58492}, {"title": "日々は過ぎれど飯うまし", "image_url": "https://cdn.myanimelist.net/images/anime/1221/148863.jpg", "id": 60658}, {"title": "ボールパークでつかまえて！", "image_url": "https://cdn.myanimelist.net/images/anime/1065/148659.jpg", "id": 60293}, {"title": "ユア・フォルマ", "image_url": "https://cdn.myanimelist.net/images/anime/1577/147967.jpg", "id": 55995}, {"title": "ちょっとだけ愛が重いダークエルフが異世界から追いかけてきた", "image_url": "https://cdn.myanimelist.net/images/anime/1192/148314.jpg", "id": 59745}, {"title": "真･侍伝 YAIBA", "image_url": "https://cdn.myanimelist.net/images/anime/1872/150755.jpg", "id": 58812}, {"title": "神統記 (テオゴニア)", "image_url": "https://cdn.myanimelist.net/images/anime/1066/148358.jpg", "id": 58614}, {"title": "ざつ旅 -That's Journey-", "image_url": "https://cdn.myanimelist.net/images/anime/1944/148218.jpg", "id": 55514}, {"title": "謎解きはディナーのあとで", "image_url": "https://cdn.myanimelist.net/images/anime/1118/149222.jpg", "id": 60377}, {"title": "ばいばい、アース 第2シーズン", "image_url": "https://cdn.myanimelist.net/images/anime/1538/147930.jpg", "id": 59819}, {"title": "GUILTY GEAR STRIVE: DUAL RULERS", "image_url": "https://cdn.myanimelist.net/images/anime/1750/150046.jpg", "id": 59070}, {"title": "中禅寺先生物怪講義録　先生が謎を解いてしまうから。", "image_url": "https://cdn.myanimelist.net/images/anime/1770/148195.jpg", "id": 60009}, {"title": "前橋ウィッチーズ", "image_url": "https://cdn.myanimelist.net/images/anime/1907/148540.jpg", "id": 59744}, {"title": "宇宙人ムームー", "image_url": "https://cdn.myanimelist.net/images/anime/1979/148096.jpg", "id": 60401}, {"title": "#コンパス2.0 戦闘摂理解析システム", "image_url": "https://cdn.myanimelist.net/images/anime/1678/148543.jpg", "id": 53762}, {"title": "えぶりでいホスト", "image_url": "https://cdn.myanimelist.net/images/anime/1793/150282.jpg", "id": 60535}, {"title": "プリンセッション・オーケストラ", "image_url": "https://cdn.myanimelist.net/images/anime/1405/152146.jpg", "id": 59078}, {"title": "クラシック★スターズ", "image_url": "https://cdn.myanimelist.net/images/anime/1564/148380.jpg", "id": 59199}, {"title": "コウペンちゃん", "image_url": "https://cdn.myanimelist.net/images/anime/1533/146981.jpg", "id": 60534}, {"title": "未ル　わたしのみらい", "image_url": "https://cdn.myanimelist.net/images/anime/1472/148029.jpg", "id": 55727}, {"title": "華Doll* -Reinterpretation of Flowering-", "image_url": "https://cdn.myanimelist.net/images/anime/1410/150097.jpg", "id": 55710}, {"title": "『ちょっとだけ愛が重いダークエルフが異世界から追いかけてきた』ミニアニメ劇場", "image_url": "https://cdn.myanimelist.net/images/anime/1707/149093.jpg", "id": 61410}, {"title": "おいでよ魔法少女村（不法占拠）", "image_url": "https://cdn.myanimelist.net/images/anime/1027/148475.jpg", "id": 61206}, {"title": "増田こうすけ劇場 ギャグマンガ日和GO", "image_url": "https://cdn.myanimelist.net/images/anime/1086/150043.jpg", "id": 60446}, {"title": "ひみつのアイプリ リング編", "image_url": "https://cdn.myanimelist.net/images/anime/1799/148164.jpg", "id": 61092}, {"title": "あらいぐま カルカル団", "image_url": "https://cdn.myanimelist.net/images/anime/1016/149942.jpg", "id": 60506}, {"title": "かいじゅうせかいせいふく", "image_url": "https://cdn.myanimelist.net/images/anime/1582/150123.jpg", "id": 60070}, {"title": "ンめねこ", "image_url": "https://cdn.myanimelist.net/images/anime/1989/149978.jpg", "id": 60947}, {"title": "すみっコぐらし ここがおちつくんです", "image_url": "https://cdn.myanimelist.net/images/anime/1177/149954.jpg", "id": 61300}, {"title": "MUZIK TIGER In the Forest", "image_url": "https://cdn.myanimelist.net/images/anime/1924/149987.jpg", "id": 58908}, {"title": "ちくわ戦記～おれのカワイイで地球侵略～", "image_url": "https://cdn.myanimelist.net/images/anime/1617/149999.jpg", "id": 61238}, {"title": "SHIBUYA♡HACHI 第3クール", "image_url": "https://cdn.myanimelist.net/images/anime/1804/148377.jpg", "id": 60612}, {"title": "ユーチューニャー 第3期", "image_url": "https://cdn.myanimelist.net/images/anime/1832/150003.jpg", "id": 61363}, {"title": "最強王図鑑 ～The Ultimate Tournament～", "image_url": "https://cdn.myanimelist.net/images/anime/1531/150143.jpg", "id": 60596}, {"title": "おしりたんてい", "image_url": "https://cdn.myanimelist.net/images/anime/1128/149981.jpg", "id": 58631}, {"title": "지구의 주인은 고양이다", "image_url": "https://cdn.myanimelist.net/images/anime/1013/149248.jpg", "id": 61485}, {"title": "ゴー！ゴー！びーくるずー のりものスター編", "image_url": "https://cdn.myanimelist.net/images/anime/1889/148647.jpg", "id": 61279}, {"title": "全力ウサギ (2023)", "image_url": "https://cdn.myanimelist.net/images/anime/1297/150031.jpg", "id": 60280}, {"title": "레인보우 버블젬 2 시크릿", "image_url": "https://cdn.myanimelist.net/images/anime/1137/149979.jpg", "id": 60689}, {"title": "サザンガキュー", "image_url": "https://cdn.myanimelist.net/images/anime/1860/150684.jpg", "id": 61899}, {"title": "ゆるかわメルちゃん", "image_url": "https://cdn.myanimelist.net/images/anime/1277/149017.jpg", "id": 61379}, {"title": "そろ谷のけいばっち シーズン2", "image_url": "https://cdn.myanimelist.net/images/anime/1558/150435.jpg", "id": 61792}, {"title": "터닝메카드 갓", "image_url": "https://cdn.myanimelist.net/images/anime/1958/150855.jpg", "id": 61960}, {"title": "꼬마캐리 탐구생활", "image_url": "https://cdn.myanimelist.net/images/anime/1652/150854.jpg", "id": 61959}, {"title": "또봇 : 대도시의 영웅들 시즌3", "image_url": "https://cdn.myanimelist.net/images/anime/1521/151975.jpg", "id": 62455}, {"title": "熊猫和甘米熊", "image_url": "https://cdn.myanimelist.net/images/anime/1216/149305.jpg", "id": 61524}, {"title": "熊猫和高卢鸡", "image_url": "https://cdn.myanimelist.net/images/anime/1242/149304.jpg", "id": 61523}, {"title": "ダンダダン 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1721/149001.jpg", "id": 60543}, {"title": "その着せ替え人形は恋をする Season 2", "image_url": "https://cdn.myanimelist.net/images/anime/1024/150787.jpg", "id": 53065}, {"title": "薫る花は凛と咲く", "image_url": "https://cdn.myanimelist.net/images/anime/1744/150433.jpg", "id": 59845}, {"title": "ガチアクタ", "image_url": "https://cdn.myanimelist.net/images/anime/1682/150432.jpg", "id": 59062}, {"title": "怪獣8号 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1177/150344.jpg", "id": 59177}, {"title": "光が死んだ夏", "image_url": "https://cdn.myanimelist.net/images/anime/1104/148614.jpg", "id": 58913}, {"title": "SAKAMOTO DAYS 第２クール", "image_url": "https://cdn.myanimelist.net/images/anime/1758/148719.jpg", "id": 60285}, {"title": "よふかしのうた Season2", "image_url": "https://cdn.myanimelist.net/images/anime/1509/148453.jpg", "id": 58390}, {"title": "青春ブタ野郎はサンタクロースの夢を見ない", "image_url": "https://cdn.myanimelist.net/images/anime/1823/149858.jpg", "id": 57433}, {"title": "Dr.STONE SCIENCE FUTURE 第2クール", "image_url": "https://cdn.myanimelist.net/images/anime/1785/151710.jpg", "id": 61322}, {"title": "サイレント・ウィッチ 沈黙の魔女の隠しごと", "image_url": "https://cdn.myanimelist.net/images/anime/1669/149732.jpg", "id": 59459}, {"title": "ぐらんぶる Season 2", "image_url": "https://cdn.myanimelist.net/images/anime/1108/150583.jpg", "id": 59986}, {"title": "水属性の魔法使い", "image_url": "https://cdn.myanimelist.net/images/anime/1383/151072.jpg", "id": 60732}, {"title": "盾の勇者の成り上がり Season 4", "image_url": "https://cdn.myanimelist.net/images/anime/1638/150592.jpg", "id": 57907}, {"title": "クレバテス-魔獣の王と赤子と屍の勇者-", "image_url": "https://cdn.myanimelist.net/images/anime/1255/150593.jpg", "id": 59205}, {"title": "桃源暗鬼", "image_url": "https://cdn.myanimelist.net/images/anime/1474/150666.jpg", "id": 58811}, {"title": "転生したら第七王子だったので、気ままに魔術を極めます 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1154/149614.jpg", "id": 59095}, {"title": "異世界黙示録マイノグーラ ～破滅の文明で始める世界征服～", "image_url": "https://cdn.myanimelist.net/images/anime/1782/150383.jpg", "id": 59130}, {"title": "帝乃三姉妹は案外、チョロい。", "image_url": "https://cdn.myanimelist.net/images/anime/1949/150965.jpg", "id": 59207}, {"title": "彼女、お借りします 第4期", "image_url": "https://cdn.myanimelist.net/images/anime/1071/150808.jpg", "id": 59277}, {"title": "わたしが恋人になれるわけないじゃん、ムリムリ! (※ムリじゃなかった!?)", "image_url": "https://cdn.myanimelist.net/images/anime/1887/150496.jpg", "id": 60326}, {"title": "New PANTY&STOCKING with GARTERBELT", "image_url": "https://cdn.myanimelist.net/images/anime/1180/150596.jpg", "id": 52293}, {"title": "強くてニューサーガ", "image_url": "https://cdn.myanimelist.net/images/anime/1170/147753.jpg", "id": 53397}, {"title": "瑠璃の宝石", "image_url": "https://cdn.myanimelist.net/images/anime/1431/148742.jpg", "id": 59791}, {"title": "CITY THE ANIMATION", "image_url": "https://cdn.myanimelist.net/images/anime/1829/145678.jpg", "id": 59898}, {"title": "勇者パーティーを追放された白魔導師、Sランク冒険者に拾われる ～この白魔導師が規格外すぎる～", "image_url": "https://cdn.myanimelist.net/images/anime/1072/149889.jpg", "id": 59424}, {"title": "カッコウの許嫁 Season2", "image_url": "https://cdn.myanimelist.net/images/anime/1551/150517.jpg", "id": 59402}, {"title": "追放者食堂へようこそ!", "image_url": "https://cdn.myanimelist.net/images/anime/1313/149355.jpg", "id": 60523}, {"title": "渡くんの××が崩壊寸前", "image_url": "https://cdn.myanimelist.net/images/anime/1502/150545.jpg", "id": 56693}, {"title": "自動販売機に生まれ変わった俺は迷宮を彷徨う2nd season", "image_url": "https://cdn.myanimelist.net/images/anime/1297/150516.jpg", "id": 56700}, {"title": "ずたぼろ令嬢は姉の元婚約者に溺愛される", "image_url": "https://cdn.myanimelist.net/images/anime/1518/149900.jpg", "id": 59421}, {"title": "雨と君と", "image_url": "https://cdn.myanimelist.net/images/anime/1329/150512.jpg", "id": 59619}, {"title": "気絶勇者と暗殺姫", "image_url": "https://cdn.myanimelist.net/images/anime/1777/150455.jpg", "id": 60951}, {"title": "ぬきたし THE ANIMATION", "image_url": "https://cdn.myanimelist.net/images/anime/1587/149982.jpg", "id": 57969}, {"title": "公女殿下の家庭教師", "image_url": "https://cdn.myanimelist.net/images/anime/1445/150685.jpg", "id": 56907}, {"title": "地縛少年花子くん2 後編", "image_url": "https://cdn.myanimelist.net/images/anime/1484/150617.jpg", "id": 61339}, {"title": "ブサメンガチファイター", "image_url": "https://cdn.myanimelist.net/images/anime/1454/150515.jpg", "id": 60316}, {"title": "まったく最近の探偵ときたら", "image_url": "https://cdn.myanimelist.net/images/anime/1323/149460.jpg", "id": 59632}, {"title": "ゲーセン少女と異文化交流", "image_url": "https://cdn.myanimelist.net/images/anime/1943/149719.jpg", "id": 59689}, {"title": "フードコートで、また明日。", "image_url": "https://cdn.myanimelist.net/images/anime/1039/150572.jpg", "id": 60508}, {"title": "ふたりソロキャンプ", "image_url": "https://cdn.myanimelist.net/images/anime/1904/150649.jpg", "id": 60665}, {"title": "ブスに花束を。", "image_url": "https://cdn.myanimelist.net/images/anime/1672/148193.jpg", "id": 53512}, {"title": "ばっどがーる", "image_url": "https://cdn.myanimelist.net/images/anime/1672/148848.jpg", "id": 59161}, {"title": "アークナイツ【焔燼曙明/RISE FROM EMBER】", "image_url": "https://cdn.myanimelist.net/images/anime/1790/149462.jpg", "id": 58749}, {"title": "ニャイト・オブ・ザ・リビングキャット", "image_url": "https://cdn.myanimelist.net/images/anime/1411/150445.jpg", "id": 58197}, {"title": "陰陽廻天 Re:バース", "image_url": "https://cdn.myanimelist.net/images/anime/1933/150503.jpg", "id": 61150}, {"title": "地獄先生ぬ～べ～", "image_url": "https://cdn.myanimelist.net/images/anime/1637/148197.jpg", "id": 59342}, {"title": "ホテル・インヒューマンズ", "image_url": "https://cdn.myanimelist.net/images/anime/1900/150443.jpg", "id": 60260}, {"title": "出禁のモグラ", "image_url": "https://cdn.myanimelist.net/images/anime/1154/149311.jpg", "id": 60315}, {"title": "カラオケ行こ!", "image_url": "https://cdn.myanimelist.net/images/anime/1801/150665.jpg", "id": 60131}, {"title": "Turkey!", "image_url": "https://cdn.myanimelist.net/images/anime/1977/150952.jpg", "id": 54028}, {"title": "フェルマーの料理", "image_url": "https://cdn.myanimelist.net/images/anime/1104/150590.jpg", "id": 60697}, {"title": "傷だらけ聖女より報復をこめて", "image_url": "https://cdn.myanimelist.net/images/anime/1546/145782.jpg", "id": 59961}, {"title": "白豚貴族ですが前世の記憶が生えたのでひよこな弟育てます", "image_url": "https://cdn.myanimelist.net/images/anime/1231/149888.jpg", "id": 59322}, {"title": "夢中さ、きみに。", "image_url": "https://cdn.myanimelist.net/images/anime/1359/150668.jpg", "id": 60130}, {"title": "銀河特急 ミルキー☆サブウェイ", "image_url": "https://cdn.myanimelist.net/images/anime/1464/150712.jpg", "id": 61274}, {"title": "9-nine- Ruler's Crown", "image_url": "https://cdn.myanimelist.net/images/anime/1199/151679.jpg", "id": 58957}, {"title": "ネクロノミ子のコズミックホラーショウ", "image_url": "https://cdn.myanimelist.net/images/anime/1845/150343.jpg", "id": 60505}, {"title": "神椿市建設中.", "image_url": "https://cdn.myanimelist.net/images/anime/1967/148714.jpg", "id": 57820}, {"title": "うたごえはミルフィーユ", "image_url": "https://cdn.myanimelist.net/images/anime/1866/150935.jpg", "id": 55689}, {"title": "おそ松さん 第4期", "image_url": "https://cdn.myanimelist.net/images/anime/1018/150416.jpg", "id": 58996}, {"title": "ぷにるはかわいいスライム 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1415/150405.jpg", "id": 60603}, {"title": "美男高校地球防衛部ハイカラ！", "image_url": "https://cdn.myanimelist.net/images/anime/1083/150814.jpg", "id": 61239}, {"title": "闇芝居 十五期", "image_url": "https://cdn.myanimelist.net/images/anime/1975/150436.jpg", "id": 61793}, {"title": "カードファイト!! ヴァンガード Divinez デラックス決勝編", "image_url": "https://cdn.myanimelist.net/images/anime/1878/150315.jpg", "id": 54145}, {"title": "週刊ラノベアニメ", "image_url": "https://cdn.myanimelist.net/images/anime/1260/150826.jpg", "id": 61846}, {"title": "ちびゴジラの逆襲(第3期)", "image_url": "https://cdn.myanimelist.net/images/anime/1859/150334.jpg", "id": 61765}, {"title": "忍ばない！クリプトニンジャ咲耶 参ノ巻", "image_url": "https://cdn.myanimelist.net/images/anime/1150/150974.jpg", "id": 59865}, {"title": "도토리 문화센터", "image_url": "https://cdn.myanimelist.net/images/anime/1418/150394.jpg", "id": 61778}, {"title": "ネコこのゴロ～天下統一編～", "image_url": "https://cdn.myanimelist.net/images/anime/1896/150723.jpg", "id": 61914}, {"title": "ぷにるんず ぷに3", "image_url": "https://cdn.myanimelist.net/images/anime/1095/150294.jpg", "id": 61290}, {"title": "すみっコぐらし そらいろのまいにち 特別編", "image_url": "https://cdn.myanimelist.net/images/anime/1816/151155.jpg", "id": 62113}, {"title": "学校では教えてくれない大切なこと", "image_url": "https://cdn.myanimelist.net/images/anime/1791/149887.jpg", "id": 61731}, {"title": "あんまり役に立たない日本史", "image_url": "https://cdn.myanimelist.net/images/anime/1147/151028.jpg", "id": 62047}, {"title": "トミカヒーローズ ジョブレイバー 特装合体ロボ", "image_url": "https://cdn.myanimelist.net/images/anime/1161/151027.jpg", "id": 62046}, {"title": "喜羊羊与灰太狼之狂野新宇宙", "image_url": "https://cdn.myanimelist.net/images/anime/1753/150849.jpg", "id": 61954}, {"title": "トミカとトム", "image_url": "https://cdn.myanimelist.net/images/anime/1521/151096.jpg", "id": 62083}, {"title": "헬로 카봇 시즌16", "image_url": "https://cdn.myanimelist.net/images/anime/1289/151967.jpg", "id": 62448}, {"title": "또봇 : 대도시의 영웅들 시즌3 파트 2", "image_url": "https://cdn.myanimelist.net/images/anime/1123/151976.jpg", "id": 62456}, {"title": "ワンパンマン 3", "image_url": "https://cdn.myanimelist.net/images/anime/1168/148347.jpg", "id": 52807}, {"title": "SPY×FAMILY Season 3", "image_url": "https://cdn.myanimelist.net/images/anime/1697/151793.jpg", "id": 59027}, {"title": "僕のヒーローアカデミア FINAL SEASON", "image_url": "https://cdn.myanimelist.net/images/anime/1959/151055.jpg", "id": 60098}, {"title": "不滅のあなたへ Season3", "image_url": "https://cdn.myanimelist.net/images/anime/1140/152364.jpg", "id": 54703}, {"title": "最後にひとつだけお願いしてもよろしいでしょうか", "image_url": "https://cdn.myanimelist.net/images/anime/1190/151754.jpg", "id": 59846}, {"title": "暗殺者である俺のステータスが勇者よりも明らかに強いのだが", "image_url": "https://cdn.myanimelist.net/images/anime/1276/151118.jpg", "id": 61026}, {"title": "とんでもスキルで異世界放浪メシ2", "image_url": "https://cdn.myanimelist.net/images/anime/1206/151772.jpg", "id": 57025}, {"title": "友達の妹が俺にだけウザい", "image_url": "https://cdn.myanimelist.net/images/anime/1699/151694.jpg", "id": 47158}, {"title": "SANDA", "image_url": "https://cdn.myanimelist.net/images/anime/1364/151767.jpg", "id": 59267}, {"title": "信じていた仲間達にダンジョン奥地で殺されかけたがギフト『無限ガチャ』でレベル9999の仲間達を手に入れて元パーティーメンバーと世界に復讐＆『ざまぁ！』します!", "image_url": "https://cdn.myanimelist.net/images/anime/1163/151246.jpg", "id": 60303}, {"title": "野生のラスボスが現れた！", "image_url": "https://cdn.myanimelist.net/images/anime/1830/145051.jpg", "id": 59644}, {"title": "永久のユウグレ", "image_url": "https://cdn.myanimelist.net/images/anime/1294/151734.jpg", "id": 61917}, {"title": "らんま1/2 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1011/152084.jpg", "id": 60564}, {"title": "私を喰べたい、ひとでなし", "image_url": "https://cdn.myanimelist.net/images/anime/1191/152368.jpg", "id": 60168}, {"title": "無職の英雄 別にスキルなんか要らなかったんだが", "image_url": "https://cdn.myanimelist.net/images/anime/1721/151097.jpg", "id": 56854}, {"title": "嘆きの亡霊は引退したい 第2クール", "image_url": "https://cdn.myanimelist.net/images/anime/1651/152063.jpg", "id": 60619}, {"title": "千歳くんはラムネ瓶のなか", "image_url": "https://cdn.myanimelist.net/images/anime/1015/151233.jpg", "id": 59517}, {"title": "不器用な先輩。", "image_url": "https://cdn.myanimelist.net/images/anime/1257/152233.jpg", "id": 60531}, {"title": "悪食令嬢と狂血公爵", "image_url": "https://cdn.myanimelist.net/images/anime/1264/152012.jpg", "id": 60162}, {"title": "味方が弱すぎて補助魔法に徹していた宮廷魔法師、追放されて最強を目指す", "image_url": "https://cdn.myanimelist.net/images/anime/1732/153360.jpg", "id": 61276}, {"title": "矢野くんの普通の日々", "image_url": "https://cdn.myanimelist.net/images/anime/1388/152332.jpg", "id": 60254}, {"title": "素材採取家の異世界旅行記", "image_url": "https://cdn.myanimelist.net/images/anime/1289/151136.jpg", "id": 61174}, {"title": "銀魂 3年Z組銀八先生", "image_url": "https://cdn.myanimelist.net/images/anime/1643/151547.jpg", "id": 54757}, {"title": "父は英雄、母は精霊、娘の私は転生者。", "image_url": "https://cdn.myanimelist.net/images/anime/1811/151799.jpg", "id": 57888}, {"title": "東島丹三郎は仮面ライダーになりたい", "image_url": "https://cdn.myanimelist.net/images/anime/1455/152139.jpg", "id": 61159}, {"title": "異世界かるてっと3", "image_url": "https://cdn.myanimelist.net/images/anime/1044/152103.jpg", "id": 61851}, {"title": "結婚指輪物語Ⅱ", "image_url": "https://cdn.myanimelist.net/images/anime/1478/151722.jpg", "id": 58515}, {"title": "ウマ娘 シンデレラグレイ 第2クール", "image_url": "https://cdn.myanimelist.net/images/anime/1120/152280.jpg", "id": 61930}, {"title": "顔に出ない柏田さんと顔に出る太田君", "image_url": "https://cdn.myanimelist.net/images/anime/1363/151886.jpg", "id": 61209}, {"title": "機械じかけのマリー", "image_url": "https://cdn.myanimelist.net/images/anime/1618/151138.jpg", "id": 59484}, {"title": "ワンダンス", "image_url": "https://cdn.myanimelist.net/images/anime/1104/151524.jpg", "id": 59623}, {"title": "太陽よりも眩しい星", "image_url": "https://cdn.myanimelist.net/images/anime/1475/152176.jpg", "id": 60969}, {"title": "さわらないで小手指くん", "image_url": "https://cdn.myanimelist.net/images/anime/1025/150482.jpg", "id": 61142}, {"title": "グノーシア", "image_url": "https://cdn.myanimelist.net/images/anime/1257/152352.jpg", "id": 60427}, {"title": "転生悪女の黒歴史", "image_url": "https://cdn.myanimelist.net/images/anime/1347/150603.jpg", "id": 58146}, {"title": "ちゃんと吸えない吸血鬼ちゃん", "image_url": "https://cdn.myanimelist.net/images/anime/1888/151887.jpg", "id": 60933}, {"title": "キミと越えて恋になる", "image_url": "https://cdn.myanimelist.net/images/anime/1810/153334.jpg", "id": 60765}, {"title": "キングダム 第6シリーズ", "image_url": "https://cdn.myanimelist.net/images/anime/1282/151476.jpg", "id": 61517}, {"title": "かくりよの宿飯 弐", "image_url": "https://cdn.myanimelist.net/images/anime/1619/151364.jpg", "id": 58772}, {"title": "Let's Play クエストだらけのマイライフ", "image_url": "https://cdn.myanimelist.net/images/anime/1148/150376.jpg", "id": 61773}, {"title": "アルマちゃんは家族になりたい", "image_url": "https://cdn.myanimelist.net/images/anime/1631/153644.jpg", "id": 60781}, {"title": "DIGIMON BEATBREAK（デジモンビートブレイク）", "image_url": "https://cdn.myanimelist.net/images/anime/1776/151242.jpg", "id": 61269}, {"title": "笑顔のたえない職場です。", "image_url": "https://cdn.myanimelist.net/images/anime/1617/151874.jpg", "id": 57859}, {"title": "終末ツーリング", "image_url": "https://cdn.myanimelist.net/images/anime/1681/151599.jpg", "id": 61072}, {"title": "青のオーケストラ Season2", "image_url": "https://cdn.myanimelist.net/images/anime/1078/151796.jpg", "id": 56877}, {"title": "しゃばけ", "image_url": "https://cdn.myanimelist.net/images/anime/1736/152179.jpg", "id": 60378}, {"title": "デブとラブと過ちと!", "image_url": "https://cdn.myanimelist.net/images/anime/1669/151736.jpg", "id": 57189}, {"title": "忍者と極道", "image_url": "https://cdn.myanimelist.net/images/anime/1296/152147.jpg", "id": 61067}, {"title": "ポーション、わが身を助ける", "image_url": "https://cdn.myanimelist.net/images/anime/1311/151227.jpg", "id": 62144}, {"title": "陛下わたしを忘れてください", "image_url": "https://cdn.myanimelist.net/images/anime/1889/151926.jpg", "id": 62428}, {"title": "SI-VIS: The Sound of Heroes", "image_url": "https://cdn.myanimelist.net/images/anime/1443/151178.jpg", "id": 62126}, {"title": "ガングリオン", "image_url": "https://cdn.myanimelist.net/images/anime/1333/151768.jpg", "id": 62378}, {"title": "モンスターストライク デッドバースリローデッド", "image_url": "https://cdn.myanimelist.net/images/anime/1090/151875.jpg", "id": 62066}, {"title": "野原ひろし 昼メシの流儀", "image_url": "https://cdn.myanimelist.net/images/anime/1736/148429.jpg", "id": 61184}, {"title": "2200年ねこの国ニッポン", "image_url": "https://cdn.myanimelist.net/images/anime/1967/152249.jpg", "id": 62496}, {"title": "超普通マホウ少女アスミトルバース", "image_url": "https://cdn.myanimelist.net/images/anime/1657/152125.jpg", "id": 62522}, {"title": "百姓貴族 3rd Season", "image_url": "https://cdn.myanimelist.net/images/anime/1223/151728.jpg", "id": 60551}, {"title": "Future Kid Takara", "image_url": "https://cdn.myanimelist.net/images/anime/1424/151473.jpg", "id": 54160}, {"title": "アニラとココラ", "image_url": "https://cdn.myanimelist.net/images/anime/1065/152406.jpg", "id": 62643}, {"title": "科学×冒険サバイバル！第2シリーズ", "image_url": "https://cdn.myanimelist.net/images/anime/1191/151082.jpg", "id": 60983}, {"title": "さわらないで小手指くん ミニアニメ劇場", "image_url": "https://cdn.myanimelist.net/images/anime/1508/152511.jpg", "id": 62682}, {"title": "地球のラテール", "image_url": "https://cdn.myanimelist.net/images/anime/1334/151528.jpg", "id": 62268}, {"title": "地球のラテール", "image_url": "https://cdn.myanimelist.net/images/anime/1334/151528.jpg", "id": 62268}, {"title": "地球のラテール", "image_url": "https://cdn.myanimelist.net/images/anime/1334/151528.jpg", "id": 62268}, {"title": "MUZIK TIGER In the Forest 第2期", "image_url": "https://cdn.myanimelist.net/images/anime/1336/152128.jpg", "id": 61924}, {"title": "SHIBUYA♡HACHI 第4クール", "image_url": "https://cdn.myanimelist.net/images/anime/1958/152020.jpg", "id": 61922}, {"title": "ジェオチャム シーズン2", "image_url": "https://cdn.myanimelist.net/images/anime/1017/151409.jpg", "id": 62231}, {"title": "うそ探偵トマント", "image_url": "https://cdn.myanimelist.net/images/anime/1745/152126.jpg", "id": 62523}, {"title": "프린세스 캐치! 티니핑", "image_url": "https://cdn.myanimelist.net/images/anime/1153/152436.jpg", "id": 62654}, {"title": "프린세스 캐치! 티니핑", "image_url": "https://cdn.myanimelist.net/images/anime/1153/152436.jpg", "id": 62654}, {"title": "북촌 5라길 쌍둥이네", "image_url": "https://cdn.myanimelist.net/images/anime/1788/151966.jpg", "id": 62447}, {"title": "シルバニアファミリー フレアのワンダーデイズ", "image_url": "https://cdn.myanimelist.net/images/anime/1126/152091.jpg", "id": 62504}, {"title": "湖池屋SDGs劇場 サスとテナ シーズン６", "image_url": "https://cdn.myanimelist.net/images/anime/1543/152209.jpg", "id": 62561}, {"title": "熊出没之神奇宝物", "image_url": "https://cdn.myanimelist.net/images/anime/1422/152461.jpg", "id": 62664}, {"title": "다이노스터: 공룡수호대", "image_url": "https://cdn.myanimelist.net/images/anime/1108/152498.jpg", "id": 62680}, {"title": "そろ谷のけいばっち シーズン3", "image_url": "https://cdn.myanimelist.net/images/anime/1962/153512.jpg", "id": 62915}, {"title": "나의 비밀친구 해치", "image_url": "https://cdn.myanimelist.net/images/anime/1151/153163.jpg", "id": 62875}];
+        const prepPool = document.getElementById('prep-pool');
+        const prepCount = document.getElementById('prep-count');
+        const trashEl = document.getElementById('trash-container');
+        const searchInput = document.getElementById('search-input');
+        
+        // 追踪当前鼠标悬停的卡片
+        let currentHoveredCard = null;
+        // 游戏是否开始
+        let isGameStarted = false;
+
+        // ========================
+        // 1. 初始化与清洗阶段逻辑
+        // ========================
+        function initPrep() {
+            rawData.forEach(anime => {
+                createCard(anime, prepPool);
+            });
+            updatePrepCount();
+        }
+
+        function createCard(anime, container) {
+            const div = document.createElement('div');
+            div.className = 'anime-card';
+            div.style.backgroundImage = `url(${anime.image_url})`;
+            div.setAttribute('data-title', anime.title);
+            div.setAttribute('data-id', anime.id);
+            div.dataset.json = JSON.stringify(anime);
+            
+            // === 极速删除逻辑 (清洗阶段) ===
+            // 右键删除
+            div.addEventListener('contextmenu', (e) => {
+                if (!isGameStarted) {
+                    e.preventDefault(); // 阻止默认菜单
+                    div.remove();
+                    updatePrepCount();
+                }
+            });
+            // 双击删除
+            div.addEventListener('dblclick', () => {
+                if (!isGameStarted) {
+                    div.remove();
+                    updatePrepCount();
+                }
+            });
+
+            // === 鼠标悬停追踪 (用于键盘快捷键) ===
+            div.addEventListener('mouseenter', () => { 
+                currentHoveredCard = div; 
+                div.classList.add('hovered-key');
+            });
+            div.addEventListener('mouseleave', () => { 
+                if (currentHoveredCard === div) currentHoveredCard = null; 
+                div.classList.remove('hovered-key');
+            });
+
+            container.appendChild(div);
+        }
+
+        function updatePrepCount() {
+            // 统计 visible 的卡片（考虑搜索过滤）
+            const count = Array.from(prepPool.children).filter(c => c.style.display !== 'none').length;
+            prepCount.innerText = count;
+        }
+
+        // === 搜索功能 ===
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const cards = prepPool.getElementsByClassName('anime-card');
+            
+            Array.from(cards).forEach(card => {
+                const title = card.getAttribute('data-title').toLowerCase();
+                if (title.includes(term)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            updatePrepCount();
+        });
+
+        // ========================
+        // 2. 游戏阶段逻辑
+        // ========================
+        let deck = [];
+
+        function startGame() {
+            // 只收集没被隐藏（搜索过滤）且没被删除的卡片
+            const remainingCards = Array.from(prepPool.children).filter(c => c.style.display !== 'none');
+            
+            if (remainingCards.length === 0) {
+                alert("卡池空了！");
+                return;
+            }
+
+            // 提取数据
+            deck = [];
+            remainingCards.forEach(card => {
+                const animeData = JSON.parse(card.dataset.json);
+                deck.push(animeData);
+            });
+
+            // 洗牌
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+
+            // 切换界面
+            isGameStarted = true;
+            document.getElementById('prep-phase').style.display = 'none';
+            document.getElementById('game-phase').style.display = 'block';
+            document.getElementById('guide-prep').style.display = 'none';
+            document.getElementById('guide-game').style.display = 'block';
+            
+            document.getElementById('deck-count').innerText = deck.length;
+        }
+
+        const gamePool = document.getElementById('game-pool');
+        const deckCountEl = document.getElementById('deck-count');
+
+        function drawAnime(num) {
+            if (deck.length === 0) { alert("没库存了！"); return; }
+            for (let i = 0; i < num; i++) {
+                if (deck.length === 0) break;
+                const anime = deck.pop();
+                createCard(anime, gamePool);
+            }
+            deckCountEl.innerText = deck.length;
+        }
+
+        function drawAll() {
+            drawAnime(deck.length);
+        }
+
+        // ========================
+        // 3. 键盘快捷键逻辑 (Quick Move)
+        // ========================
+        document.addEventListener('keydown', (e) => {
+            if (!isGameStarted || !currentHoveredCard) return;
+
+            const card = currentHoveredCard;
+            let targetId = null;
+
+            // 按键映射
+            if (e.key === '1') targetId = 'tier-s';
+            else if (e.key === '2') targetId = 'tier-a';
+            else if (e.key === '3') targetId = 'tier-b';
+            else if (e.key === '4') targetId = 'tier-c';
+            else if (e.key === '5') targetId = 'tier-d';
+            else if (e.key === 'Delete' || e.key === 'Backspace') {
+                card.remove();
+                currentHoveredCard = null; // 移除引用
+                return;
+            }
+
+            if (targetId) {
+                const targetContainer = document.getElementById(targetId);
+                targetContainer.appendChild(card);
+                // 添加一个小动画效果提示移动成功
+                card.style.animation = 'none';
+                card.offsetHeight; /* trigger reflow */
+                card.style.animation = 'popIn 0.3s';
+            }
+        });
+
+        // ========================
+        // 4. SortableJS 配置
+        // ========================
+        const containers = document.querySelectorAll('.tier-content, .pool-content, .prep-grid');
+        containers.forEach(container => {
+            new Sortable(container, {
+                group: 'shared', 
+                animation: 100,
+                ghostClass: 'sortable-ghost'
+            });
+        });
+
+        new Sortable(trashEl, {
+            group: 'shared',
+            onAdd: function (evt) {
+                evt.item.remove();
+                if (!isGameStarted) updatePrepCount();
+            },
+            onDragEnter: () => trashEl.classList.add('drag-over'),
+            onDragLeave: () => trashEl.classList.remove('drag-over')
+        });
+
+        initPrep();
+    </script>
+</body>
+</html>
+    
